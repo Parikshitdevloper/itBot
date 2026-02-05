@@ -3,40 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Universal AI - Secured & Animated</title>
+    <title>AETHER | Universal AI Interface</title>
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
+                fontFamily: {
+                    sans: ['Outfit', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'monospace'],
+                },
                 extend: {
                     colors: {
-                        glass: "rgba(255, 255, 255, 0.05)",
-                        glassBorder: "rgba(255, 255, 255, 0.1)",
-                        neonBlue: "#00f3ff",
-                        neonPurple: "#bc13fe",
+                        background: "#050505",
+                        surface: "#0f0f11",
+                        primary: "#3b82f6",
+                        accent: "#8b5cf6",
+                        glass: "rgba(20, 20, 25, 0.6)",
+                        glassBorder: "rgba(255, 255, 255, 0.08)"
                     },
                     animation: {
-                        'blob': 'blob 7s infinite',
+                        'pulse-glow': 'pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'float': 'float 6s ease-in-out infinite',
-                        'speak': 'speak 0.5s infinite alternate'
+                        'slide-up': 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
                     },
                     keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' },
+                            '50%': { opacity: .8, boxShadow: '0 0 40px rgba(139, 92, 246, 0.3)' },
                         },
-                        speak: {
-                            '0%': { boxShadow: '0 0 10px #00f3ff' },
-                            '100%': { boxShadow: '0 0 40px #00f3ff, 0 0 20px #bc13fe' }
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'slide-up': {
+                            '0%': { opacity: 0, transform: 'translateY(20px) scale(0.95)' },
+                            '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
                         }
                     }
                 }
@@ -45,434 +55,526 @@
     </script>
 
     <style>
+        body { background-color: #050505; color: #e2e8f0; overflow: hidden; }
+        
+        /* Particle Canvas Background */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        
-        /* Animated Background */
-        body { background-color: #0f0f11; }
-        .bg-gradient-mesh {
-            background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #000000 100%);
-        }
-        
-        /* The Avatar Eye */
-        .eye-container {
-            width: 120px;
-            height: 120px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 50%;
-            border: 2px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        .eye-ball {
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle at 30% 30%, #fff, #00f3ff, #005f73);
-            border-radius: 50%;
-            box-shadow: 0 0 15px #00f3ff;
-            transition: transform 0.1s ease-out;
-        }
-        .speaking .eye-container {
-            animation: speak 0.2s infinite alternate;
-            border-color: #00f3ff;
-        }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-        /* Glassmorphism Classes */
+        /* Glassmorphism Utilities */
         .glass-panel {
-            background: rgba(20, 20, 25, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(18, 18, 20, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-    </style>
-</body >
-<body class="text-gray-100 h-[100dvh] overflow-hidden flex flex-col font-sans selection:bg-neonBlue selection:text-black">
 
-    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div class="absolute top-0 -right-4 w-72 h-72 bg-blue-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        /* Markdown Styling */
+        .prose pre { background: #0d0d10 !important; border: 1px solid #2a2a30; border-radius: 0.75rem; }
+        .prose code { color: #a5b4fc; }
+        .prose strong { color: #fff; }
+        
+        /* Loader */
+        .orb-loader {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(59,130,246,0.5));
+            box-shadow: 0 0 30px rgba(59,130,246,0.4);
+            animation: spin 2s linear infinite, pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="antialiased selection:bg-primary/30 selection:text-white">
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050505] transition-opacity duration-700">
+        <div class="orb-loader mb-6"></div>
+        <h1 class="text-2xl font-bold tracking-[0.2em] bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">AETHER AI</h1>
+        <p class="text-gray-500 text-xs mt-2 font-mono">INITIALIZING NEURAL INTERFACE...</p>
     </div>
 
-    <div id="app" class="relative z-10 flex h-full w-full">
+    <div id="app" class="relative z-10 flex h-[100dvh] opacity-0 transition-opacity duration-1000">
         
-        <aside id="sidebar" class="hidden lg:flex flex-col w-72 glass-panel border-r-0 m-4 rounded-3xl transition-all duration-300 transform">
-            <div class="p-6">
-                <div class="text-xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-neonBlue to-neonPurple mb-6">
-                    UNIVERSAL AI
-                </div>
-                <button onclick="createNewChat()" class="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-sm font-medium flex items-center gap-2 group">
-                    <span class="bg-neonBlue text-black rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold group-hover:scale-110 transition-transform">+</span>
-                    New Session
-                </button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto px-4 space-y-2" id="chat-history-list">
+        <aside class="hidden lg:flex flex-col w-80 h-full p-4 gap-4">
+            <div class="glass-panel h-full rounded-3xl flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-white/5">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 shadow-lg shadow-blue-500/30"></div>
+                        <span class="font-bold text-lg tracking-wide">AETHER</span>
+                    </div>
+                    <button onclick="createNewChat()" class="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all flex items-center justify-center gap-2 group">
+                        <span class="text-xl font-light group-hover:scale-110 transition-transform">+</span>
+                        <span class="text-sm font-medium">New Session</span>
+                    </button>
                 </div>
 
-            <div class="p-4 mt-auto">
-                <div class="text-[10px] text-gray-500 text-center uppercase tracking-widest mb-2">Secure Connection</div>
-                <button onclick="toggleSidebarMobile()" class="lg:hidden w-full text-center p-2 text-gray-400">Close</button>
+                <div class="flex-1 overflow-y-auto p-3 space-y-1" id="sidebar-history">
+                    </div>
+
+                <div class="p-4 border-t border-white/5 bg-black/20">
+                    <div class="text-[10px] text-gray-500 font-mono text-center mb-2">CONNECTED: OPENROUTER V1</div>
+                    <button onclick="clearAllChats()" class="text-xs text-red-400 hover:text-red-300 w-full text-center py-2 opacity-60 hover:opacity-100 transition-opacity">Reset Memory</button>
+                </div>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col relative m-0 lg:my-4 lg:mr-4 rounded-none lg:rounded-3xl glass-panel overflow-hidden">
-            
-            <header class="h-16 flex items-center justify-between px-6 border-b border-white/5 shrink-0 bg-black/20">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebarMobile()" class="lg:hidden text-white p-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
-                    <h2 id="chat-title" class="font-medium text-gray-200 truncate max-w-[200px]">New Session</h2>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div id="status-indicator" class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
-                    <button onclick="deleteCurrentChat()" class="text-gray-400 hover:text-red-400 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </div>
-            </header>
-
-            <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth relative">
+        <main class="flex-1 flex flex-col h-full relative p-0 lg:p-4 pl-0">
+            <div class="flex-1 glass-panel rounded-none lg:rounded-3xl flex flex-col overflow-hidden relative shadow-2xl">
                 
-                <div id="avatar-wrapper" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-all duration-500 opacity-100 z-0">
-                    <div class="eye-container" id="ai-eye">
-                        <div class="eye-ball"></div>
-                    </div>
-                    <div class="mt-8 text-center space-y-2">
-                        <h1 class="text-2xl font-light text-white tracking-widest">SYSTEM ONLINE</h1>
-                        <p class="text-gray-500 text-sm font-mono">Select a neural model below to begin.</p>
-                    </div>
-                </div>
-
-                <div id="messages-area" class="relative z-10 pb-32"></div>
-            </div>
-
-            <div class="absolute bottom-6 left-4 right-4 md:left-10 md:right-10 z-20">
-                <div class="bg-black/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col relative transition-all duration-300 focus-within:border-neonBlue/50 focus-within:shadow-[0_0_30px_rgba(0,243,255,0.1)]">
-                    
-                    <textarea id="user-input" rows="1" class="w-full bg-transparent text-gray-100 p-4 pb-12 outline-none resize-none max-h-40 placeholder-gray-500" placeholder="Type a message..." oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
-
-                    <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center">
-                        
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none text-neonBlue">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            </div>
-                            <select id="model-select" class="appearance-none bg-white/5 hover:bg-white/10 text-xs text-gray-300 py-1.5 pl-8 pr-8 rounded-full border border-white/10 outline-none focus:border-neonBlue cursor-pointer transition-colors" onchange="updateModelDisplay()">
-                                </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-gray-500">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <header class="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-white/5 backdrop-blur-xl shrink-0 z-20">
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleMobileSidebar()" class="lg:hidden text-white/70 hover:text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                        <div>
+                            <h2 id="current-chat-title" class="text-sm font-bold text-gray-200">New Session</h2>
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                <span class="text-[10px] text-gray-400 font-mono uppercase" id="model-status">DeepSeek R1 Online</span>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="relative group">
+                         <select id="model-select" onchange="updateModel()" class="appearance-none bg-black/40 border border-white/10 text-xs text-gray-300 py-2 pl-4 pr-8 rounded-lg outline-none focus:border-blue-500/50 cursor-pointer hover:bg-black/60 transition-colors">
+                            <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
+                            <option value="google/gemini-2.0-flash-lite-preview-02-05:free">Gemini 2.0 Flash (Free)</option>
+                            <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
+                            <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 (Free)</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </header>
 
-                        <button onclick="sendMessage()" id="send-btn" class="p-2 bg-gradient-to-r from-neonBlue to-blue-600 rounded-full text-black hover:scale-110 transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-5 h-5 transform rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
-                        </button>
+                <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth relative">
+                    <div id="intro-state" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-100 transition-opacity duration-500">
+                        <div class="w-32 h-32 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-3xl absolute animate-pulse-glow"></div>
+                        <div class="relative z-10 text-center space-y-4">
+                            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">How can I help?</h1>
+                            <p class="text-gray-500 max-w-md mx-auto text-sm">Experience the power of multiple LLMs. Select a model above and start building.</p>
+                        </div>
+                    </div>
+                    </div>
+
+                <div class="p-4 lg:p-6 relative z-30">
+                    <div class="max-w-4xl mx-auto relative group">
+                        <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl opacity-30 group-focus-within:opacity-100 transition duration-500 blur-sm group-hover:opacity-60"></div>
+                        
+                        <div class="relative bg-[#0b0b0d] rounded-2xl flex items-end p-2 border border-white/10">
+                            <textarea id="user-input" rows="1" class="w-full bg-transparent text-gray-100 p-3 pl-4 outline-none resize-none max-h-40 placeholder-gray-600 font-sans text-[15px] leading-relaxed" placeholder="Message Aether..." oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+                            
+                            <button id="send-btn" onclick="sendMessage()" class="p-3 mb-0.5 mr-0.5 rounded-xl bg-white text-black hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-5 h-5 transform rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                        <div class="text-center mt-2">
+                             <p class="text-[10px] text-gray-600 font-mono">AI can make mistakes. Verify critical info.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </main>
-        
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black/80 z-30 hidden lg:hidden backdrop-blur-sm" onclick="toggleSidebarMobile()"></div>
-        <aside id="sidebar-mobile" class="fixed inset-y-0 left-0 w-72 bg-[#121214] border-r border-white/10 z-40 transform -translate-x-full transition-transform duration-300 flex flex-col p-4 lg:hidden">
-            </aside>
+
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleMobileSidebar()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#121214] z-50 transform -translate-x-full transition-transform duration-300 lg:hidden flex flex-col border-r border-white/10">
+            <div class="p-4 border-b border-white/10">
+                <h2 class="font-bold text-xl text-white">History</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2" id="mobile-history-list"></div>
+        </aside>
 
     </div>
 
     <script>
-        /**
-         * 🔐 SECURITY LAYER
-         * The API Key is Base64 encoded and obfuscated.
-         * While not 100% hack-proof on client-side, it prevents casual viewing.
-         */
-        const _0x1a = "c2stb3ItdjEtYTU1NjI3ZWI3ODJmODlhYzkwOGQ3YzJjMGQyNjM5ZmFi";
-        const _0x1b = "MGVmMDIyNWU3MTU1OWQ2MjQyZDY1ZjgwNzVjNmVkZg==";
-        const getSecureKey = () => atob(_0x1a + _0x1b);
-
-        // --- CONFIG ---
-        const MODELS = [
-            { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1 (Default)" },
-            { id: "arcee-ai/trinity-large-preview:free", name: "Arcee Trinity" },
-            { id: "tngtech/deepseek-r1t2-chimera:free", name: "DeepSeek R1t2" },
-            { id: "z-ai/glm-4.5-air:free", name: "GLM 4.5 Air" },
-            { id: "nvidia/nemotron-3-nano-30b-a3b:free", name: "Nvidia Nemotron" },
-            { id: "openai/gpt-oss-120b:free", name: "GPT OSS 120b" },
-            { id: "qwen/qwen3-coder:free", name: "Qwen 3 Coder" },
-            { id: "upstage/solar-pro-3:free", name: "Solar Pro 3" }
-        ];
+        // --- 1. CONFIGURATION ---
+        // SECURITY NOTE: In a real production app, never expose keys in client-side code.
+        // Since this is a requested local demo, we construct it here.
+        const PART_A = "sk-or-v1-a55627eb782f89ac908d7c2c0d2639fab0ef0225";
+        const PART_B = "e71559d6242d65f8075c6edf";
+        const API_KEY = PART_A + PART_B; // Concatenated specifically to ensure correctness
+        
+        const DEFAULT_SYSTEM_PROMPT = "You are Aether, a sophisticated AI assistant. You answer concisely, professionally, and use Markdown for formatting code.";
 
         let state = {
             chats: [],
             currentChatId: null,
-            model: MODELS[0].id,
+            model: "deepseek/deepseek-r1:free",
             isGenerating: false
         };
 
         const els = {
+            app: document.getElementById('app'),
+            loader: document.getElementById('loader'),
+            chatContainer: document.getElementById('chat-container'),
             input: document.getElementById('user-input'),
-            messages: document.getElementById('messages-area'),
-            chatList: document.getElementById('chat-history-list'),
+            sidebarHistory: document.getElementById('sidebar-history'),
+            mobileHistory: document.getElementById('mobile-history-list'),
+            chatTitle: document.getElementById('current-chat-title'),
+            intro: document.getElementById('intro-state'),
             modelSelect: document.getElementById('model-select'),
-            avatar: document.getElementById('avatar-wrapper'),
-            eye: document.getElementById('ai-eye'),
-            status: document.getElementById('status-indicator'),
-            mobileSidebar: document.getElementById('sidebar-mobile')
+            sendBtn: document.getElementById('send-btn'),
+            modelStatus: document.getElementById('model-status')
         };
 
-        // --- INITIALIZATION ---
-        window.onload = () => {
+        // --- 2. INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
             loadState();
-            populateModels();
-            renderChatList();
+            initParticles();
             
-            // Markdown Settings
+            // Simulate heavy loading for effect
+            setTimeout(() => {
+                els.loader.style.opacity = '0';
+                els.app.classList.remove('opacity-0');
+                setTimeout(() => els.loader.style.display = 'none', 700);
+            }, 1500);
+
+            if (state.chats.length === 0) createNewChat();
+            else loadChat(state.chats[0].id);
+
+            // Markdown Config
             marked.setOptions({
                 highlight: (code, lang) => highlight.highlight(code, { language: highlight.getLanguage(lang) ? lang : 'plaintext' }).value
             });
+        });
 
-            if(state.chats.length === 0) createNewChat();
-            else loadChat(state.chats[0].id);
-
-            // Clone sidebar for mobile
-            els.mobileSidebar.innerHTML = document.getElementById('sidebar').innerHTML;
-            
-            // Init Eye Tracking
-            initEyeTracking();
-        };
-
-        // --- EYE ANIMATION SYSTEM ---
-        function initEyeTracking() {
-            document.addEventListener('mousemove', (e) => {
-                if(state.isGenerating) return; // Don't track if busy speaking
-                
-                const eyeRect = els.eye.getBoundingClientRect();
-                const eyeCenterX = eyeRect.left + eyeRect.width / 2;
-                const eyeCenterY = eyeRect.top + eyeRect.height / 2;
-                
-                const angle = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
-                const distance = Math.min(10, Math.hypot(e.clientX - eyeCenterX, e.clientY - eyeCenterY) / 10);
-                
-                const pupilX = Math.cos(angle) * distance;
-                const pupilY = Math.sin(angle) * distance;
-                
-                els.eye.querySelector('.eye-ball').style.transform = `translate(${pupilX}px, ${pupilY}px)`;
-            });
-        }
-
-        function setAvatarState(state) {
-            const body = document.body;
-            if (state === 'speaking') {
-                body.classList.add('speaking');
-                els.eye.querySelector('.eye-ball').style.transform = 'scale(1.2)';
-                els.status.classList.remove('bg-green-500');
-                els.status.classList.add('bg-neonBlue', 'animate-pulse');
-            } else {
-                body.classList.remove('speaking');
-                els.eye.querySelector('.eye-ball').style.transform = 'scale(1)';
-                els.status.classList.add('bg-green-500');
-                els.status.classList.remove('bg-neonBlue', 'animate-pulse');
-            }
-        }
-
-        // --- CORE FUNCTIONS ---
+        // --- 3. CORE FUNCTIONS ---
         function saveState() {
-            localStorage.setItem('secure_ai_state', JSON.stringify(state));
+            localStorage.setItem('aether_state', JSON.stringify(state));
         }
 
         function loadState() {
-            const saved = localStorage.getItem('secure_ai_state');
-            if(saved) state = { ...state, ...JSON.parse(saved) };
+            const saved = localStorage.getItem('aether_state');
+            if (saved) state = { ...state, ...JSON.parse(saved) };
+            // Ensure model select matches state
+            els.modelSelect.value = state.model;
         }
 
-        function populateModels() {
-            els.modelSelect.innerHTML = MODELS.map(m => 
-                `<option value="${m.id}" ${state.model === m.id ? 'selected' : ''}>${m.name}</option>`
-            ).join('');
-        }
-
-        function updateModelDisplay() {
+        function updateModel() {
             state.model = els.modelSelect.value;
+            els.modelStatus.innerText = state.model.split('/')[1].split(':')[0] + " Online";
             saveState();
         }
 
         function createNewChat() {
-            const chat = { id: Date.now().toString(), title: "New Session", messages: [] };
+            const chat = {
+                id: Date.now().toString(),
+                title: "New Session",
+                messages: []
+            };
             state.chats.unshift(chat);
             saveState();
-            renderChatList();
             loadChat(chat.id);
-            if(window.innerWidth < 1024) toggleSidebarMobile(false);
+            renderHistory();
         }
 
         function loadChat(id) {
             state.currentChatId = id;
             const chat = state.chats.find(c => c.id === id);
-            document.getElementById('chat-title').innerText = chat.title;
+            if(!chat) return;
+
+            els.chatTitle.innerText = chat.title;
+            els.chatContainer.innerHTML = ''; // Clear current view
             
-            els.messages.innerHTML = '';
-            
-            // Avatar Visibility Logic
+            // Show intro if empty
             if(chat.messages.length === 0) {
-                els.avatar.style.opacity = '1';
-                els.avatar.style.transform = 'scale(1)';
+                els.intro.style.opacity = '1';
+                els.chatContainer.appendChild(els.intro);
             } else {
-                els.avatar.style.opacity = '0';
-                els.avatar.style.transform = 'scale(0.8) translateY(-50px)';
-                chat.messages.forEach(m => appendMessage(m.role, m.content));
+                els.intro.style.opacity = '0';
+                chat.messages.forEach(msg => appendMessageToDOM(msg.role, msg.content));
             }
-            renderChatList();
+            
+            renderHistory();
+            setTimeout(scrollToBottom, 100);
         }
 
-        function appendMessage(role, content) {
+        function renderHistory() {
+            const generateHTML = (chat) => {
+                const isActive = chat.id === state.currentChatId;
+                return `
+                <button onclick="loadChat('${chat.id}')" class="w-full text-left p-3 rounded-lg text-xs font-medium transition-all duration-200 border border-transparent ${
+                    isActive 
+                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                }">
+                    <div class="truncate">${chat.title}</div>
+                    <div class="text-[10px] opacity-50 mt-1">${new Date(parseInt(chat.id)).toLocaleTimeString()}</div>
+                </button>`;
+            };
+
+            const html = state.chats.map(generateHTML).join('');
+            els.sidebarHistory.innerHTML = html;
+            els.mobileHistory.innerHTML = html;
+        }
+
+        function appendMessageToDOM(role, content) {
+            // Remove intro if visible
+            els.intro.style.opacity = '0';
+            
             const isUser = role === 'user';
             const div = document.createElement('div');
-            div.className = `flex w-full mb-6 ${isUser ? 'justify-end' : 'justify-start'}`;
             
-            // Animation class for entry
-            div.classList.add('animate-[blob_0.5s_ease-out]');
+            div.className = `flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`;
+            
+            const bubbleStyle = isUser 
+                ? 'bg-white text-black rounded-2xl rounded-tr-sm ml-12' 
+                : 'glass-panel text-gray-200 rounded-2xl rounded-tl-sm mr-12 border-white/10';
 
-            const bubbleClass = isUser 
-                ? 'bg-gradient-to-br from-neonBlue/10 to-blue-600/10 border border-neonBlue/20 text-white' 
-                : 'glass-panel text-gray-200';
+            const contentHTML = isUser ? content : marked.parse(content);
 
             div.innerHTML = `
-                <div class="max-w-[85%] lg:max-w-[75%] ${bubbleClass} rounded-2xl p-4 shadow-lg backdrop-blur-md relative overflow-hidden">
-                    ${!isUser ? '<div class="absolute top-0 left-0 w-1 h-full bg-neonPurple/50"></div>' : ''}
-                    <div class="prose prose-invert prose-sm max-w-none leading-relaxed">
-                        ${isUser ? content : marked.parse(content)}
+                <div class="flex flex-col max-w-3xl ${isUser ? 'items-end' : 'items-start'}">
+                    <div class="text-[10px] text-gray-500 mb-1 px-1 font-mono uppercase">${role === 'user' ? 'You' : 'Aether AI'}</div>
+                    <div class="p-4 shadow-lg ${bubbleStyle} text-sm leading-relaxed overflow-hidden">
+                        <div class="prose prose-invert prose-sm max-w-none">
+                            ${contentHTML}
+                        </div>
                     </div>
                 </div>
             `;
             
-            els.messages.appendChild(div);
-            // Highlight code
-            if(!isUser) div.querySelectorAll('pre code').forEach(b => highlight.highlightElement(b));
-            
-            // Scroll to bottom
-            document.getElementById('chat-container').scrollTo({ top: document.getElementById('chat-container').scrollHeight, behavior: 'smooth' });
-            
+            els.chatContainer.appendChild(div);
+            // Highlight code blocks
+            if(!isUser) {
+                div.querySelectorAll('pre code').forEach(block => highlight.highlightElement(block));
+            }
+            scrollToBottom();
             return div;
         }
 
+        // --- 4. API & MESSAGING LOGIC (THE FIX) ---
         async function sendMessage() {
             const text = els.input.value.trim();
-            if(!text || state.isGenerating) return;
+            if (!text || state.isGenerating) return;
 
-            // UI Updates
+            // 1. UI Setup
             els.input.value = '';
             els.input.style.height = 'auto';
-            els.avatar.style.opacity = '0'; // Hide avatar when chatting starts
-            
+            els.sendBtn.disabled = true;
+            els.sendBtn.classList.add('opacity-50');
+
+            // 2. Add User Message
             const chat = state.chats.find(c => c.id === state.currentChatId);
             chat.messages.push({ role: 'user', content: text });
-            appendMessage('user', text);
-
-            if(chat.messages.length === 1) {
-                chat.title = text.slice(0, 25);
-                document.getElementById('chat-title').innerText = chat.title;
-                renderChatList();
-            }
-
-            // AI Response
-            state.isGenerating = true;
-            setAvatarState('speaking');
+            appendMessageToDOM('user', text);
             
-            const aiDiv = appendMessage('assistant', '<span class="animate-pulse text-neonBlue">analyzing...</span>');
-            const contentDiv = aiDiv.querySelector('.prose');
+            if (chat.messages.length === 1) {
+                chat.title = text.slice(0, 30);
+                els.chatTitle.innerText = chat.title;
+                renderHistory();
+            }
+            saveState();
+
+            // 3. Prepare AI Placeholder
+            state.isGenerating = true;
+            const aiDiv = appendMessageToDOM('assistant', '<span class="animate-pulse text-blue-400 font-mono">Thinking...</span>');
+            const contentContainer = aiDiv.querySelector('.prose');
             let fullResponse = "";
 
             try {
+                // 4. THE REQUEST
+                console.log("Sending Request to OpenRouter...");
+                console.log("Model:", state.model);
+                
                 const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${getSecureKey()}`,
-                        "Content-Type": "application/json"
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href, // Good practice for free tier
+                        "X-Title": "Aether UI"
                     },
                     body: JSON.stringify({
                         model: state.model,
                         messages: [
-                            { role: "system", content: "You are a highly advanced AI interface. Answer succinctly and use Markdown." },
+                            { role: "system", content: DEFAULT_SYSTEM_PROMPT },
                             ...chat.messages
                         ],
-                        stream: true
+                        stream: true // Enable streaming
                     })
                 });
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                contentDiv.innerHTML = "";
-
-                while(true) {
-                    const { done, value } = await reader.read();
-                    if(done) break;
-                    
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
-                    
-                    for(const line of lines) {
-                        if(line.startsWith('data: ') && line !== 'data: [DONE]') {
-                            try {
-                                const json = JSON.parse(line.replace('data: ', ''));
-                                const delta = json.choices[0]?.delta?.content || "";
-                                fullResponse += delta;
-                                contentDiv.innerHTML = marked.parse(fullResponse);
-                            } catch(e) {}
-                        }
-                    }
-                    // Auto scroll
-                    const container = document.getElementById('chat-container');
-                    container.scrollTop = container.scrollHeight;
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`API Error ${response.status}: ${errText}`);
                 }
 
+                // 5. STREAM READING
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                contentContainer.innerHTML = ""; // Remove "Thinking..."
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split("\n");
+
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            const dataStr = line.replace("data: ", "").trim();
+                            if (dataStr === "[DONE]") break;
+                            
+                            try {
+                                const json = JSON.parse(dataStr);
+                                const content = json.choices[0]?.delta?.content || "";
+                                if (content) {
+                                    fullResponse += content;
+                                    // Live Render
+                                    contentContainer.innerHTML = marked.parse(fullResponse);
+                                    scrollToBottom();
+                                }
+                            } catch (e) {
+                                console.warn("Parse Error", e);
+                            }
+                        }
+                    }
+                }
+
+                // 6. SUCCESS
                 chat.messages.push({ role: 'assistant', content: fullResponse });
                 saveState();
-                contentDiv.querySelectorAll('pre code').forEach(b => highlight.highlightElement(b));
+                // Re-highlight final code
+                contentContainer.querySelectorAll('pre code').forEach(block => highlight.highlightElement(block));
 
-            } catch(e) {
-                contentDiv.innerHTML = `<span class="text-red-400">Connection Error: ${e.message}</span>`;
+            } catch (error) {
+                // 7. ERROR HANDLING UI
+                console.error("Chat Error:", error);
+                contentContainer.innerHTML = `
+                    <div class="border border-red-500/30 bg-red-500/10 p-3 rounded-lg text-red-300 text-xs font-mono">
+                        <strong>CONNECTION FAILED</strong><br>
+                        ${error.message}<br><br>
+                        <em>Tip: Try selecting a different model from the top dropdown. Free models can be busy.</em>
+                    </div>
+                `;
             } finally {
                 state.isGenerating = false;
-                setAvatarState('idle');
+                els.sendBtn.disabled = false;
+                els.sendBtn.classList.remove('opacity-50');
             }
         }
 
-        // --- UTILS ---
-        function renderChatList() {
-            const html = state.chats.map(c => `
-                <button onclick="loadChat('${c.id}')" class="w-full text-left p-3 rounded-lg text-sm truncate transition-all ${c.id === state.currentChatId ? 'bg-neonBlue/10 text-neonBlue border border-neonBlue/20' : 'text-gray-400 hover:bg-white/5'}">
-                    ${c.title}
-                </button>
-            `).join('');
-            els.chatList.innerHTML = html;
-            
-            // Sync mobile sidebar
-            const mobileList = els.mobileSidebar.querySelector('#chat-history-list');
-            if(mobileList) mobileList.innerHTML = html;
+        // --- 5. UTILS & EFFECTS ---
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
         }
 
-        function handleEnter(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}
-        function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
-        function deleteCurrentChat() {
-            if(!confirm('Terminate this session?')) return;
-            state.chats = state.chats.filter(c => c.id !== state.currentChatId);
-            if(state.chats.length === 0) createNewChat();
-            else loadChat(state.chats[0].id);
-            saveState();
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
         }
-        function toggleSidebarMobile(force) {
-            const sb = document.getElementById('sidebar-mobile');
-            const ov = document.getElementById('sidebar-overlay');
-            const show = force !== undefined ? force : sb.classList.contains('-translate-x-full');
-            if(show) { sb.classList.remove('-translate-x-full'); ov.classList.remove('hidden'); }
-            else { sb.classList.add('-translate-x-full'); ov.classList.add('hidden'); }
+
+        function scrollToBottom() {
+            const el = els.chatContainer;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function toggleMobileSidebar() {
+            const sb = document.getElementById('mobile-sidebar');
+            const ov = document.getElementById('mobile-overlay');
+            const isClosed = sb.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sb.classList.remove('-translate-x-full');
+                ov.classList.remove('hidden');
+            } else {
+                sb.classList.add('-translate-x-full');
+                ov.classList.add('hidden');
+            }
+        }
+        
+        function clearAllChats() {
+            if(confirm("Are you sure? This will wipe all memory.")) {
+                state.chats = [];
+                state.currentChatId = null;
+                saveState();
+                createNewChat();
+            }
+        }
+
+        // --- 6. BACKGROUND ANIMATION (Particles) ---
+        function initParticles() {
+            const canvas = document.getElementById('canvas-bg');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            const resize = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.size = Math.random() * 2;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(100, 150, 255, ${Math.random() * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                // Connect particles
+                particles.forEach((a, i) => {
+                    particles.slice(i + 1).forEach(b => {
+                        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+                        if (dist < 150) {
+                            ctx.strokeStyle = `rgba(100, 150, 255, ${0.1 - dist/1500})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(b.x, b.y);
+                            ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
         }
     </script>
 </body>
